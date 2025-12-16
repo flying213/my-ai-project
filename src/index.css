@@ -37,16 +37,28 @@ h1 {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #000;
 }
 
-.camera-container {
+.camera-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  aspect-ratio: 16/9; /* Default, will be overridden by JS */
+  margin: auto;
+}
+
+.camera-view, .canvas-overlay, .remote-camera-container {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: #000;
-  border-radius: 0;
 }
 
 .instruction-text {
@@ -61,4 +73,5 @@ h1 {
   backdrop-filter: blur(4px);
   margin: 0;
   font-weight: 500;
+  pointer-events: none;
 }

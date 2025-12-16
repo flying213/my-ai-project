@@ -1,11 +1,13 @@
 import { forwardRef, useEffect } from 'react';
 
 interface CameraViewProps {
-    onStreamReady: (video: HTMLVideoElement) => void;
+    onStreamReady: (video: HTMLVideoElement) => void | (() => void);
 }
 
 export const CameraView = forwardRef<HTMLVideoElement, CameraViewProps>(({ onStreamReady }, ref) => {
     useEffect(() => {
+        let cleanupFn: (() => void) | undefined | void;
+
         async function setupCamera() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
@@ -19,7 +21,10 @@ export const CameraView = forwardRef<HTMLVideoElement, CameraViewProps>(({ onStr
                 if (ref && 'current' in ref && ref.current) {
                     ref.current.srcObject = stream;
                     ref.current.onloadeddata = () => {
-                        onStreamReady(ref.current!);
+                        // Previous cleanup if any (though onloadeddata usually fires once per stream)
+                        if (typeof cleanupFn === 'function') cleanupFn();
+
+                        cleanupFn = onStreamReady(ref.current!);
                     };
                 }
             } catch (err) {
@@ -29,6 +34,16 @@ export const CameraView = forwardRef<HTMLVideoElement, CameraViewProps>(({ onStr
         }
 
         setupCamera();
+
+        return () => {
+            if (typeof cleanupFn === 'function') cleanupFn();
+
+            // Optional: Stop tracks to release camera
+            if (ref && 'current' in ref && ref.current && ref.current.srcObject) {
+                const stream = ref.current.srcObject as MediaStream;
+                stream.getTracks().forEach(track => track.stop());
+            }
+        };
     }, [onStreamReady, ref]);
 
     return (
